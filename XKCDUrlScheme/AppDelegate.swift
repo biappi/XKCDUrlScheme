@@ -15,13 +15,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Insert code here to initialize your application
+        NSAppleEventManager.shared().setEventHandler(self,
+                                                     andSelector: #selector(handleGetUrl),
+                                                     forEventClass: AEEventClass(kInternetEventClass),
+                                                     andEventID: AEEventID(kAEGetURL))
+    }
+    
+    @IBAction func showWindow(_ sender: Any) {
+        window.makeKeyAndOrderFront(self)
     }
 
-    func applicationWillTerminate(_ aNotification: Notification) {
-        // Insert code here to tear down your application
+    func handleGetUrl(event: NSAppleEventDescriptor, replyEvent: NSAppleEventDescriptor) {
+        if let xkcdURL =
+            event
+                .paramDescriptor(forKeyword: keyDirectObject)?
+                .stringValue
+                .flatMap ({ URL(string: $0) })?
+                .host
+                .flatMap ({ Int($0) })
+                .flatMap ({ return NSURL(string: "https://xkcd.com/\($0)")})
+        {
+            NSWorkspace.shared().open(xkcdURL as URL)
+            print(xkcdURL)
+        }
     }
-
-
 }
 
